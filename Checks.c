@@ -16,7 +16,7 @@ void InputCheck(int N, int size){
 
 
 void CorrectnessCheck(u,u_anal,rank,size){
-    printf("Make sure to use the correct f and u boundary conditions!\n");
+    printf("Make sure to use the correct f and u boundary conditions!!\n");
     // u = sin(pi*x)*sin(pi*y)*sin(pi*z)
 
 }
