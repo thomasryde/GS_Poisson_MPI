@@ -3,15 +3,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "alloc3d.h"
-#include "print.h"
 #include <math.h>
-#include "InitVari.h"
+#include "InitArrays.h"
 #include <omp.h>
 
 #include <mpi.h>
-#include "gauss_seidel.h"
+#include "Algorithms.h"
+#include "Checks.h"
 
 #define N_DEFAULT 100
+
+#define case_type 1 // 0 for timing, 1 for correctness test.
 
 int main(int argc, char *argv[]) {
 
@@ -29,6 +31,7 @@ int main(int argc, char *argv[]) {
     char	*output_prefix = "poisson_res";
     char    *output_ext    = "";
     char	output_filename[FILENAME_MAX];
+    double 	***u_anal = NULL;
     double 	***u = NULL;
     double 	***f = NULL;
 
@@ -41,39 +44,54 @@ int main(int argc, char *argv[]) {
 	    output_type = atoi(argv[5]);  // output type
     }
 
-    InputCheck(N,size);
+    int int_sqrt_size = InputCheck(N,size);
+
+    int n = N/int_sqrt_size;
+    double t1,time;
 
     // allocate memory
-    if ( (u = d_malloc_3d(N+2, N+2, N+2)) == NULL ) {
-        perror("array u: allocation failed on rank %d\n",rank);
+    if ( (u = d_malloc_3d(n, n, N)) == NULL ) {
+        printf("array u: allocation failed on rank %d\n",rank);
         exit(-1);
     }
-    if ( (f = d_malloc_3d(N+2, N+2, N+2)) == NULL ) {
-        perror("array f: allocation failed on rank %d\n",rank;
+    if ( (f = d_malloc_3d(n, n, N)) == NULL ) {
+        printf("array f: allocation failed on rank %d\n",rank);
         exit(-1);
     }
-    printf("luder");
-    InitializeU(u, N);
-    InitializeF(f, N);
+    
+    switch(case_type){
+    case 0: // Timing case
+        InitializeU(u, n, N);
+        InitializeF(f, n, N);
 
-    MPI_BARRIER();
-    if (rank == 0){
-        double t1 = MPI_Wtime();
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            t1 = MPI_Wtime();
+        }
+        //Gauss_Seidel_1(f,u,n,iter_max,&tolerance);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            time = MPI_Wtime() - t1;
+            printf("It took %f seconds!\n",time);
+        }
+        break;
+
+    case 1: //Correctness test
+        InitU_cortest(u, n, N);
+        InitF_cortest(f, n, N,size,rank);
+        //Gauss_Seidel_1(f,u,n,iter_max,&tolerance);
+        if ( (u_anal = d_malloc_3d(n, n, N)) == NULL ) {
+            printf("array u_anal: allocation failed on rank %d\n",rank);
+            exit(-1);
+        }
+        double error = CorrectnessCheck(u,u_anal,rank,int_sqrt_size,n,N);
+        printf("Error: %f, rank: %d\n",error,rank);
+        break;
+    default:
+        printf("Incorrect case_type, chose 0 for timing - 1 for correctness check\n");
+        break;
     }
-    Gauss_Seidel_1(f,u,N,iter_max,&tolerance);
-    MPI_BARRIER();
-    if (rank == 0){
-        double time = MPI_Wtime() - t1;
-        printf("It took %f seconds!\n",time);
-    }
-
-
-    if ( (u_anal = d_malloc_3d(N+2, N+2, N+2)) == NULL ) {
-        perror("array u_anal: allocation failed on rank %d\n",rank);
-        exit(-1);
-    }
-    CorrectnessCheck(double *** u, double *** u_anal,int rank, int size);
-
+    /*
     switch(output_type) {
 	case 0:
 	    // no output at all
@@ -82,18 +100,28 @@ int main(int argc, char *argv[]) {
 	    output_ext = ".bin";
 	    sprintf(output_filename, "%s_%d%s", output_prefix, N, output_ext);
 	    fprintf(stderr, "Write binary dump to %s: ", output_filename);
-	    print_binary(output_filename, N, u);
+	    print_binary(output_filename, n, u);
 	    break;
 	case 4:
 	    output_ext = ".vtk";
 	    sprintf(output_filename, "%s_%d%s", output_prefix, N, output_ext);
 	    fprintf(stderr, "Write VTK file to %s: ", output_filename);
-	    print_vtk(output_filename, N+2, u);
+	    print_vtk(output_filename, n, u);
 	    break;
 	default:
 	    fprintf(stderr, "Non-supported output type!\n");
 	    break;
     }
+    */
+
+    /* // this works :smiley:
+    printf("Does rank %d have a edge %d\n",rank,CheckEdge(size,rank)); 
+    int neigh[6];
+    NeighbourCheck(neigh, size, rank, 10, N);
+    for (int i = 0; i<6; i++) {
+        printf("Rank %d neigbour[%d] %d\n",rank,i,neigh[i]);
+    }
+    */
 
     // de-allocate memory
     free(u);
@@ -101,6 +129,6 @@ int main(int argc, char *argv[]) {
 
     MPI_Finalize();
 
-    return(0);
+    return 0;
     
 }
