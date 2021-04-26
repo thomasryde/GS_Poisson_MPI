@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
         perror("array f: allocation failed on rank %d\n",rank;
         exit(-1);
     }
-
+    printf("luder");
     InitializeU(u, N);
     InitializeF(f, N);
 
