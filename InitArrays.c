@@ -82,18 +82,22 @@ void InitF_cortest(double ***f, int n, int N, int size, int rank) {
     
     int col = rank % (int) sqrt((double) size);
     int row = rank/(int) sqrt((double) size);
-    int z_start = col*n;
-    int x_start = row*n;
+    int z_start = col*(n - 2);
+    int x_start = row*(n - 2);
 
     double x,y,z;
-    double eps = (double)2/N;
+    double eps = 2/(double)N;
 
     for(int i=1; i < n-1; i++){                //x
         for(int j=1; j < n-1; j++){            //z
             for(int k=1; k < N-1; k++){        //y
-                x = 2*(1 - eps)*(double)(x_start + i + 1)/N - 1 + eps;
-                z = 2*(1 - eps)*(double)(z_start + j + 1)/N - 1 + eps;
-                y = 2*(1 - eps)*(double)(k + 1)/N - 1 + eps;
+                //x = 2*(1 - eps)*(double)(x_start + i + 1)/N - 1 + eps;
+                x = (x_start + i)*eps - 1;
+                //z = 2*(1 - eps)*(double)(z_start + j + 1)/N - 1 + eps;
+                z = (z_start + j)*eps - 1;
+                //z = 1 - 
+                //y = 2*(1 - eps)*(double)(k + 1)/N - 1 + eps;
+                y = k*eps - 1;
                 f[i][j][k] = 3*PI*PI*sin(PI*x)*sin(PI*y)*sin(PI*z);
             }
         }

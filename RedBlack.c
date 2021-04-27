@@ -59,13 +59,13 @@ void Gauss_seidel_redblack(double ***f,double *** u, int, n, int N,int max_iter,
         }
         if (neigh[2] != -1){
             // send and recieve right
-            MPI_Send(&(u[n-1][1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[n][0][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[n-2][1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[n-1][0][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[3] != -1){
             // send and recieve below
-            MPI_Send(&(u[1][n-1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[0][n][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][n-2][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[0][n-1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
 

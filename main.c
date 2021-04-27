@@ -79,7 +79,9 @@ int main(int argc, char *argv[]) {
     case 1: //Correctness test
         InitU_cortest(u, n, N);
         InitF_cortest(f, n, N,size,rank);
+
         Gauss_Seidel_1(f,u,n,N,iter_max,&tolerance);
+        
         if ( (u_anal = d_malloc_3d(n, n, N)) == NULL ) {
             printf("array u_anal: allocation failed on rank %d\n",rank);
             exit(-1);

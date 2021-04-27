@@ -32,25 +32,30 @@ double CorrectnessCheck(double *** u, double *** u_anal, int rank,int int_sqrt_s
     int col = rank % int_sqrt_size;
     int row = rank/int_sqrt_size;
     
-
-    int z_start = col*n;
-    int x_start = row*n;
+    int z_start = col*(n - 2);
+    int x_start = row*(n - 2);
 
     double x,y,z;
-    double eps = (double)2/N;
+    double eps = 2.0/(double) N;
 
     for(int i=1; i < n-1; i++){                //x
         for(int j=1; j < n-1; j++){            //z
             for(int k=1; k < N-1; k++){        //y
-                x = 2*(1 - eps)*(double)(x_start + i + 1)/N - 1 + eps;
-                z = 2*(1 - eps)*(double)(z_start + j + 1)/N - 1 + eps;
-                y = 2*(1 - eps)*(double)(k + 1)/N - 1 + eps;
+                //x = 2*(1 - eps)*(double)(x_start + i + 1)/N - 1 + eps;
+                x = (x_start + i)*eps - 1;
+                //z = 2*(1 - eps)*(double)(z_start + j + 1)/N - 1 + eps;
+                z = (z_start + j)*eps - 1;
+                //y = 2*(1 - eps)*(double)(k + 1)/N - 1 + eps;
+                y = k*eps - 1;
+
                 u_anal[i][j][k] = sin(PI*x)*sin(PI*y)*sin(PI*z);
                 FrobError += (u_anal[i][j][k] - u[i][j][k])*(u_anal[i][j][k] - u[i][j][k]);
             }
         }
     }        
-
+    if (rank == 0) {
+        printf("u_anal[25][25][25] = %f\n",u_anal[25][25][25]);
+    }
     return FrobError;
 
 }
@@ -104,15 +109,13 @@ void NeighbourCheck(int neigh[], int size, int rank){
     neigh[3] = rank + len;
     
     int edge = CheckEdge(size, rank);
-    
-    if (edge != -1){
-        neigh[edge-1] = -1;
-    }
     if (edge > 10) {
         edge1 = edge/10;
         edge2 = edge % 10;
         neigh[edge1 - 1] = -1;
         neigh[edge2 - 1] = -1;
+    } else if (edge != -1){
+        neigh[edge-1] = -1;
     }
 }
 
