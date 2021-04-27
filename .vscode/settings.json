@@ -4,6 +4,8 @@
         "math.h": "c",
         "stdlib.h": "c",
         "type_traits": "c",
-        "cmath": "c"
+        "cmath": "c",
+        "array": "c",
+        "initializer_list": "c"
     }
 }

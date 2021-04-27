@@ -46,7 +46,8 @@ int main(int argc, char *argv[]) {
 
     int int_sqrt_size = InputCheck(N,size);
 
-    int n = N/int_sqrt_size;
+    int n = N/int_sqrt_size + 2;
+    N = N + 2;
     double t1,time;
 
     // allocate memory
@@ -78,7 +79,7 @@ int main(int argc, char *argv[]) {
     case 1: //Correctness test
         InitU_cortest(u, n, N);
         InitF_cortest(f, n, N,size,rank);
-        //Gauss_Seidel_1(f,u,n,N,iter_max,&tolerance);
+        Gauss_Seidel_1(f,u,n,N,iter_max,&tolerance);
         if ( (u_anal = d_malloc_3d(n, n, N)) == NULL ) {
             printf("array u_anal: allocation failed on rank %d\n",rank);
             exit(-1);

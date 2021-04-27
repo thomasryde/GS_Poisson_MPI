@@ -39,9 +39,9 @@ double CorrectnessCheck(double *** u, double *** u_anal, int rank,int int_sqrt_s
     double x,y,z;
     double eps = (double)2/N;
 
-    for(int i=0; i < n; i++){                //x
-        for(int j=0; j < n; j++){            //z
-            for(int k=0; k < N; k++){        //y
+    for(int i=1; i < n-1; i++){                //x
+        for(int j=1; j < n-1; j++){            //z
+            for(int k=1; k < N-1; k++){        //y
                 x = 2*(1 - eps)*(double)(x_start + i + 1)/N - 1 + eps;
                 z = 2*(1 - eps)*(double)(z_start + j + 1)/N - 1 + eps;
                 y = 2*(1 - eps)*(double)(k + 1)/N - 1 + eps;
@@ -93,8 +93,8 @@ int CheckEdge(int size, int rank) {
     return edge;
 }
 
-void NeighbourCheck(int neigh[], int size, int rank, int iter, int N){
-    // neigh[0] = above, neigh[1] = left, neigh[2] = right, neigh[3] = below, neigh[4] = in front?, neigh[5] = behind?
+void NeighbourCheck(int neigh[], int size, int rank){
+    // neigh[0] = above, neigh[1] = left, neigh[2] = right, neigh[3] = below
     int edge1, edge2,len;
     len = (int) sqrt(size);
     
@@ -102,19 +102,11 @@ void NeighbourCheck(int neigh[], int size, int rank, int iter, int N){
     neigh[1] = rank - 1;
     neigh[2] = rank + 1;
     neigh[3] = rank + len;
-    neigh[4] = rank;
-    neigh[5] = rank;
     
     int edge = CheckEdge(size, rank);
     
     if (edge != -1){
         neigh[edge-1] = -1;
-    }
-    if (iter == 0){
-        neigh[4] = -1;
-    }
-    if (iter == (N-1)){
-        neigh[5] = -1;
     }
     if (edge > 10) {
         edge1 = edge/10;
