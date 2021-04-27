@@ -49,23 +49,23 @@ void Gauss_seidel_redblack(double ***f,double *** u, int, n, int N,int max_iter,
         //Red points done, send and recv to black points
         if (neigh[0] != -1){
             // send and recieve above
-            MPI_Send(&(u[1][j][1]), n-2, MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[0][j][1]), n-2, MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][n-1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[0][n-1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[1] != -1){
             // send and recieve left
-            MPI_Send(&(u[1][j][1]), n-2, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[0][j][1]), n-2, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[0][0][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[2] != -1){
             // send and recieve right
-            MPI_Send(&(u[1][j][1]), n-2, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[0][j][1]), n-2, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[n-1][1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[n][0][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[3] != -1){
             // send and recieve below
-            MPI_Send(&(u[1][j][1]), n-2, MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[0][j][1]), n-2, MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][n-1][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[0][n][1]), (n-2)*(N-1), MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
 

@@ -36,8 +36,8 @@ void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double *
             
             if (neigh[1] != -1){
                 // send to left & recieve from left
-                MPI_Send(&(u[1][j][1]), N-2, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD);
-                MPI_Recv(&(u[0][j][1]), N-2, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                MPI_Send(&u[1][j][1], N-2, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD);
+                MPI_Recv(&u[0][j][1], N-2, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
             }
             
             for (i=1; i<n-1;i++){     //x
@@ -45,22 +45,22 @@ void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double *
                 if (j == 1){
                     if (neigh[0] != -1){
                         // send to up
-                        MPI_Send(&(u[i][1][1]), N-2, MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD);
+                        MPI_Send(&u[i][1][1], N-2, MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD);
                         // recieve from up
-                        MPI_Recv(&(u[i][0][1]), N-2, MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                        MPI_Recv(&u[i][0][1], N-2, MPI_DOUBLE, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     }
                     
                 } else if (j == n-2){
                     if (neigh[3] != -1){
                         // recieve from below
-                        MPI_Recv(&(u[i][n-1][1]), N-2, MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                        MPI_Recv(&u[i][n-1][1], N-2, MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     }
                 }
 
                 if(i == n-2){
                     if (neigh[2] != -1) {
                         // recieve from right
-                        MPI_Recv(&(u[n-1][j][1]), N-2, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                        MPI_Recv(&u[n-1][j][1], N-2, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
                     }
                 }
 
@@ -68,29 +68,27 @@ void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double *
                     //Gauss-seidel iteration
                     u_tmp = u[i][j][k];
                     u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
-
                     //computation for tolerence
                     FrobNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
                 }
                 if (j == n-2){
                     if (neigh[3] != -1) {
                         // send to below
-                        MPI_Send(&(u[i][n-2][1]), N-2, MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD);
+                        MPI_Send(&u[i][n-2][1], N-2, MPI_DOUBLE, neigh[3], iter, MPI_COMM_WORLD);
                     }
                 }
             }
             if (neigh[2] != -1) {
                 // send to right
-                MPI_Send(&(u[n-2][j][1]), N-2, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
+                MPI_Send(&u[n-2][j][1], N-2, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
             }
         }
         
+        MPI_Allreduce(&FrobNorm,&FrobNorm,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
 
-        // Allreduce FrobNorm
-
-        // if (iter % 100 == 0 && rank == 0){
-        //     printf("FrobNorm = %f\t",FrobNorm);
-        // }
+        if (iter % 100 == 0 && rank == 0){
+             printf("FrobNorm = %f\t",FrobNorm);
+        }
         MPI_Barrier(MPI_COMM_WORLD);
 
         iter += 1;
