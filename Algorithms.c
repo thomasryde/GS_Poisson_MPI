@@ -15,7 +15,7 @@ void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double *
     double FrobNorm = 10; //accumilator for frobenius norm
     int iter = 0; //iterator
     double u_tmp;
-    double delta_sq = 4.0/((N+1)*(N+1));
+    double delta_sq = 4.0/(N*N);
     double h = 1.0/6;
     int i,j,k;
     double tolCheck = (*tolerance) * (*tolerance);

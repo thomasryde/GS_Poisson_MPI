@@ -87,7 +87,6 @@ int main(int argc, char *argv[]) {
             exit(-1);
         }
         double error = CorrectnessCheck(u,u_anal,rank,int_sqrt_size,n,N);
-        printf("Error: %f, rank: %d\n",error,rank);
         break;
     default:
         printf("Incorrect case_type, chose 0 for timing - 1 for correctness check\n");
@@ -120,7 +119,7 @@ int main(int argc, char *argv[]) {
     printf("Does rank %d have a edge %d\n",rank,CheckEdge(size,rank)); 
     int neigh[6];
     NeighbourCheck(neigh, size, rank, 10, N);
-    for (int i = 0; i<6; i++) {
+    for (int i = 0; i<4; i++) {
         printf("Rank %d neigbour[%d] %d\n",rank,i,neigh[i]);
     }
     */
