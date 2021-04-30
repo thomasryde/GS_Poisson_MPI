@@ -79,9 +79,10 @@ int main(int argc, char *argv[]) {
         }
 
         double error = CorrectnessCheck(u,u_anal,rank,int_sqrt_size,n,N);
+        free(u_anal);
         break;
 
-    case 1: // Correctness Check
+    case 1: // Blocked Gauss Seidel
         if (rank == 0){
             printf("---Running blocked Gauss Seidel---\n");
         }
@@ -100,7 +101,7 @@ int main(int argc, char *argv[]) {
         }
         break;
 
-    case 2: // non-blocked Gauss-Seidel
+    case 2: // non-blocked Gauss Seidel
         if (rank == 0){
             printf("---Running non blocked Gauss Seidel---\n");
         }

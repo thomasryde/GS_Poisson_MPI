@@ -30,11 +30,17 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
     // n-2 antal blocks - N-2 antal af elementer pr block - N*n antal elementer imellem hver block
     MPI_Type_vector(n-2,N-2,N*n,MPI_DOUBLE,&send);
     MPI_Type_commit(&send);
-    /*
+    
+    if (rank == 0){
+        int send_size;
+        MPI_Type_size(send,&send_size);
+        printf("send size %d\n", send_size/sizeof(double));
+    }
+    
     if (neigh[0] != -1){
         // send and recieve above
-        MPI_Send(&(u[1][1][1]), (n-2)*(N-2), send, neigh[0], max_iter+2, MPI_COMM_WORLD);
-        MPI_Recv(&(u[1][0][1]), (n-2)*(N-2), send, neigh[0], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        MPI_Send(&(u[1][1][1]), 1, send, neigh[0], max_iter+2, MPI_COMM_WORLD);
+        MPI_Recv(&(u[1][0][1]), 1, send, neigh[0], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     if (neigh[1] != -1){
         // send and recieve left
@@ -48,10 +54,10 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
     }
     if (neigh[3] != -1){
         // send and recieve below
-        MPI_Send(&(u[1][n-2][1]), (n-2)*(N-2), send, neigh[3], max_iter+2, MPI_COMM_WORLD);
-        MPI_Recv(&(u[1][n-1][1]), (n-2)*(N-2), send, neigh[3], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-    }*/
-
+        MPI_Send(&(u[1][n-2][1]), 1, send, neigh[3], max_iter+2, MPI_COMM_WORLD);
+        MPI_Recv(&(u[1][n-1][1]), 1, send, neigh[3], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    }
+    
     //Main Loop
     while (iter <= max_iter && FrobNorm > tolCheck){
         FrobNorm = 0;
@@ -61,7 +67,7 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
                     //Gauss-seidel iteration
                     
                     //Red Points
-                    if( (j+k) % 2 == 0){
+                    if( (i+j+k) % 2 == 0){
                         u_tmp = u[i][j][k];
 
                         u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
@@ -76,8 +82,8 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         //Red points done, send and recv to black points
         if (neigh[0] != -1){
             // send and recieve above
-            MPI_Send(&(u[1][1][1]), (n-2)*(N-2), send, neigh[0], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[1][0][1]), (n-2)*(N-2), send, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][1][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][0][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[1] != -1){
             // send and recieve left
@@ -91,18 +97,18 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         }
         if (neigh[3] != -1){
             // send and recieve below
-            MPI_Send(&(u[1][n-2][1]), (n-2)*(N-2), send, neigh[3], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[1][n-1][1]), (n-2)*(N-2), send, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][n-1][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
 
-        for(i=1; i<N-1;i++){         //y
+         for(i=1; i<n-1;i++){        //x
             for(j=1; j<n-1;j++){     //z
-                for(k=1; k<n-1;k++){ //x
+                for(k=1; k<N-1;k++){ //y
                     //Gauss-seidel iteration
 
                     //Black Points
-                    if( (j+k) % 2 != 0) {
+                    if( (i+j+k) % 2 != 0) {
                         u_tmp = u[i][j][k];
 
                         u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
@@ -116,8 +122,8 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         //Black points done, send and recv for next iteration
         if (neigh[0] != -1){
             // send and recieve above
-            MPI_Send(&(u[1][1][1]), (n-2)*(N-2), send, neigh[0], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[1][0][1]), (n-2)*(N-2), send, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][1][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][0][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[1] != -1){
             // send and recieve left
@@ -131,8 +137,8 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         }
         if (neigh[3] != -1){
             // send and recieve below
-            MPI_Send(&(u[1][n-2][1]), (n-2)*(N-2), send, neigh[3], iter, MPI_COMM_WORLD);
-            MPI_Recv(&(u[1][n-1][1]), (n-2)*(N-2), send, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+            MPI_Send(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][n-1][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
         if (iter % FrobCheckFreq == 0) {
@@ -144,11 +150,14 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         }
 
         iter += 1;
-        if(n == max_iter) {
+        if(n == max_iter && rank == 0) {
             printf("Stopped due to iter_max \n");
         }
+        
     }
-    printf("Stopped in iteration number: %d\n",iter-1);
+    if (rank == 0) {
+        printf("Stopped in iteration number: %d\n",iter-1);
+    }
     *tolerance = sqrt(FrobNorm);
 
 }
