@@ -5,7 +5,7 @@
 #include "mpi.h"
 #include "Checks.h"
 
-void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double * tolerance){
+void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,double * tolerance){
 
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -19,16 +19,17 @@ void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double *
     double h = 1.0/6;
     int i,j,k;
     double tolCheck = (*tolerance) * (*tolerance);
+    int FrobCheckFreq = 100;
 
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
     
     //Main Loop
-    while (iter < max_iter && FrobNorm > tolCheck){
-        FrobNorm = 0;
+    while (iter <= max_iter && FrobNorm > tolCheck){
+        if (iter % FrobCheckFreq == 0){
+            FrobNorm = 0;
+        }
         // neigh[0] = above, neigh[1] = left, neigh[2] = right, neigh[3] = below
-        MPI_Barrier(MPI_COMM_WORLD);
-        
         for (j=1; j<n-1;j++){         //z
             
             if (neigh[1] != -1){
@@ -63,13 +64,13 @@ void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double *
                 
                 for (k=1; k<N-1;k++){ //y
                     //Gauss-seidel iteration
-                    u_tmp = u[i][j][k];
-                    u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
-                    //computation for tolerence
-                    //if(iter%500==0 && i==3 && j == 25 && k == 25){
-                    //    printf("iter: %d \t rank: %d\n u_tmp = %f\n u[25][25][25] = %f\n",iter, rank, u_tmp, u[i][j][k]);
-                    //}
-                    FrobNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
+                    if (iter % FrobCheckFreq == 0){
+                        u_tmp = u[i][j][k];
+                        u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
+                        FrobNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
+                    } else{
+                        u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
+                    }
                 }
                 if (j == n-2){
                     if (neigh[3] != -1) {
@@ -84,17 +85,17 @@ void Gauss_Seidel_1(double ***f,double *** u, int n, int N,int max_iter,double *
             }
         }
         
-        MPI_Allreduce(&FrobNorm,&FrobNorm,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
-        iter += 1;
-        if (iter % 100 == 0 && rank == 0){
-             printf("FrobNorm = %f\n",FrobNorm);
+        if (iter % FrobCheckFreq == 0) {
+            MPI_Allreduce(&FrobNorm,&FrobNorm,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
         }
-        MPI_Barrier(MPI_COMM_WORLD);
         
+        if (iter % FrobCheckFreq == 0 && rank == 0){
+             printf("Iter = %d --- FrobNorm = %f\n",iter,FrobNorm);
+        }
+        iter += 1;
     }
-    printf("Stopped in iteration number: %d\n",iter);
-    *tolerance = sqrt(FrobNorm);
     if (rank == 0) {
-        printf("u[25][25][25] = %f\n",u[25][25][25]);
+        printf("Stopped in iteration number: %d\n",iter-1);
     }
+    *tolerance = sqrt(FrobNorm);
 }

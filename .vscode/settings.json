@@ -6,6 +6,7 @@
         "type_traits": "c",
         "cmath": "c",
         "array": "c",
-        "initializer_list": "c"
+        "initializer_list": "c",
+        "bitset": "c"
     }
 }

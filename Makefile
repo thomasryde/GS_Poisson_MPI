@@ -8,14 +8,11 @@ FFLAGS = -O3 -ftree-vectorize -march=native
 INCLUDES = -I.
 OBJS = alloc3d.o
 OBJS += Checks.o
-OBJS += Algorithms.o
 OBJS += InitArrays.o
 
 alloc3d.o: alloc3d.c alloc3d.h
 	$(MPICC) -c $< $(INCLUDES) $(CFLAGS)
 Checks.o: Checks.c Checks.h
-	$(MPICC) -c $< $(INCLUDES) $(CFLAGS)
-Algorithms.o: Algorithms.c Algorithms.h Checks.c Checks.h
 	$(MPICC) -c $< $(INCLUDES) $(CFLAGS)
 InitArrays.o: InitArrays.c InitArrays.h
 	$(MPICC) -c $< $(INCLUDES) $(CFLAGS)

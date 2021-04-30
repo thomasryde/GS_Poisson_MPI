@@ -13,7 +13,10 @@
 
 #define N_DEFAULT 100
 
-#define case_type 1 // 0 for timing, 1 for correctness test.
+#define case_type 3 // 0 for correctness test,
+                    // 1 for blocked Gauss Seidel,
+                    // 2 for non blocked Gauss Seidel, 
+                    // 3 for Red and Black Gauss Seidel.
 
 int main(int argc, char *argv[]) {
 
@@ -59,16 +62,37 @@ int main(int argc, char *argv[]) {
         printf("array f: allocation failed on rank %d\n",rank);
         exit(-1);
     }
-    
-    switch(case_type){
-    case 0: // Timing case
-        InitializeU(u, n, N);
-        InitializeF(f, n, N);
 
+    switch(case_type){
+    case 0: //Correctness test
+        if (rank == 0){
+            printf("---Running correctness check---\n");
+        }
+        InitU_cortest(u, n, N);
+        InitF_cortest(f, n, N, size, rank);
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        Gauss_Seidel_Blocked(f,u,n,N,iter_max,&tolerance);
+        if ( (u_anal = d_malloc_3d(n, n, N)) == NULL ) {
+            printf("array u_anal: allocation failed on rank %d\n",rank);
+            exit(-1);
+        }
+
+        double error = CorrectnessCheck(u,u_anal,rank,int_sqrt_size,n,N);
+        break;
+
+    case 1: // Correctness Check
+        if (rank == 0){
+            printf("---Running blocked Gauss Seidel---\n");
+        }
+        InitializeU(u, n, N);
+        InitializeF(f, n, N, size, rank);
+        
         MPI_Barrier(MPI_COMM_WORLD);
         if (rank == 0){
             t1 = MPI_Wtime();
         }
+        Gauss_Seidel_Blocked(f,u,n,N,iter_max,&tolerance);
         MPI_Barrier(MPI_COMM_WORLD);
         if (rank == 0){
             time = MPI_Wtime() - t1;
@@ -76,22 +100,47 @@ int main(int argc, char *argv[]) {
         }
         break;
 
-    case 1: //Correctness test
-        InitU_cortest(u, n, N);
-        InitF_cortest(f, n, N,size,rank);
-
-        Gauss_Seidel_1(f,u,n,N,iter_max,&tolerance);
-        
-        if ( (u_anal = d_malloc_3d(n, n, N)) == NULL ) {
-            printf("array u_anal: allocation failed on rank %d\n",rank);
-            exit(-1);
+    case 2: // non-blocked Gauss-Seidel
+        if (rank == 0){
+            printf("---Running non blocked Gauss Seidel---\n");
         }
-        double error = CorrectnessCheck(u,u_anal,rank,int_sqrt_size,n,N);
+        InitializeU(u, n, N);
+        InitializeF(f, n, N, size, rank);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            t1 = MPI_Wtime();
+        }
+        Gauss_Seidel_nonblocked(f,u,n,N,iter_max,&tolerance);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            time = MPI_Wtime() - t1;
+            printf("It took %f seconds!\n",time);
+        }
+        break;
+
+    case 3: // Red and Black Gauss Seidel
+        if (rank == 0){
+            printf("---Running Gauss Seidel with red and black---\n");
+        }
+        InitializeU(u, n, N);
+        InitializeF(f, n, N, size, rank);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            t1 = MPI_Wtime();
+        }
+        Gauss_seidel_redblack(f,u,n,N,iter_max,&tolerance);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            time = MPI_Wtime() - t1;
+            printf("It took %f seconds!\n",time);
+        }
         break;
     default:
         printf("Incorrect case_type, chose 0 for timing - 1 for correctness check\n");
         break;
     }
+    
+
     /*
     switch(output_type) {
 	case 0:
