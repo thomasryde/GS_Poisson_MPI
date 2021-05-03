@@ -5,7 +5,7 @@
 #include "mpi.h"
 #include "Checks.h"
 
-void Gauss_seidel_redblack2(double ***f,double *** u, int n, int N,int max_iter,double * tolerance) {
+void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,double * tolerance) {
 
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -30,49 +30,36 @@ void Gauss_seidel_redblack2(double ***f,double *** u, int n, int N,int max_iter,
     // n-2 antal blocks - N-2 antal af elementer pr block - N*n antal elementer imellem hver block
     MPI_Type_vector(n-2,N-2,N*n,MPI_DOUBLE,&send);
     MPI_Type_commit(&send);
-
+    
     if (rank == 0){
         int send_size;
         MPI_Type_size(send,&send_size);
         printf("send size %d\n", send_size/sizeof(double));
     }
     
-    // Initialize requests as null
-    int noRequests = 8;
-    MPI_Request requests[noRequests];
-    for(int i = 0; i < noRequests; i++){
-        requests[i] = MPI_REQUEST_NULL;
-    }
-
-    
     if (neigh[0] != -1){
         // send and recieve above
-        MPI_Irecv(&(u[1][0][1]), 1, send, neigh[0], max_iter+2, MPI_COMM_WORLD,&requests[0]);
-        MPI_Isend(&(u[1][1][1]), 1, send, neigh[0], max_iter+2, MPI_COMM_WORLD,&requests[1]);
-        
+        MPI_Send(&(u[1][1][1]), 1, send, neigh[0], max_iter+2, MPI_COMM_WORLD);
+        MPI_Recv(&(u[1][0][1]), 1, send, neigh[0], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-    
     if (neigh[1] != -1){
         // send and recieve left
-        MPI_Irecv(&(u[0][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], max_iter+2, MPI_COMM_WORLD,&requests[2]);
-        MPI_Isend(&(u[1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], max_iter+2, MPI_COMM_WORLD,&requests[3]);
+        MPI_Send(&(u[1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], max_iter+2, MPI_COMM_WORLD);
+        MPI_Recv(&(u[0][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     if (neigh[2] != -1){
         // send and recieve right
-        MPI_Irecv(&u[n-1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], max_iter+2, MPI_COMM_WORLD, &requests[4]);
-        MPI_Isend(&(u[n-2][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], max_iter+2, MPI_COMM_WORLD, &requests[5]);
-        
+        MPI_Send(&(u[n-2][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], max_iter+2, MPI_COMM_WORLD);
+        MPI_Recv(&(u[n-1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
-    
     if (neigh[3] != -1){
         // send and recieve below
-        MPI_Irecv(&(u[1][n-1][1]), 1, send, neigh[3], max_iter+2, MPI_COMM_WORLD,&requests[6]);
-        MPI_Isend(&(u[1][n-2][1]), 1, send, neigh[3], max_iter+2, MPI_COMM_WORLD,&requests[7]);
+        MPI_Send(&(u[1][n-2][1]), 1, send, neigh[3], max_iter+2, MPI_COMM_WORLD);
+        MPI_Recv(&(u[1][n-1][1]), 1, send, neigh[3], max_iter+2, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
     }
     
     //Main Loop
     while (iter <= max_iter && FrobNorm > tolCheck){
-        MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
         FrobNorm = 0;
         for(i=1; i<n-1;i++){         //x
             for(j=1; j<n-1;j++){     //z
@@ -95,27 +82,25 @@ void Gauss_seidel_redblack2(double ***f,double *** u, int n, int N,int max_iter,
         //Red points done, send and recv to black points
         if (neigh[0] != -1){
             // send and recieve above
-            MPI_Irecv(&(u[1][0][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD,&requests[0]);
-            MPI_Isend(&(u[1][1][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD,&requests[1]);
-            
+            MPI_Send(&(u[1][1][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][0][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[1] != -1){
             // send and recieve left
-            MPI_Irecv(&(u[0][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, &requests[2]);
-            MPI_Isend(&(u[1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD,&requests[3]);
+            MPI_Send(&(u[1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[0][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[2] != -1){
             // send and recieve right
-            MPI_Irecv(&(u[n-1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD,&requests[4]);
-            MPI_Isend(&(u[n-2][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD,&requests[5]);
+            MPI_Send(&(u[n-2][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[n-1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[3] != -1){
             // send and recieve below
-            MPI_Irecv(&(u[1][n-1][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD,&requests[6]);
-            MPI_Isend(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD,&requests[7]);
+            MPI_Send(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][n-1][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
-        MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
 
          for(i=1; i<n-1;i++){        //x
             for(j=1; j<n-1;j++){     //z
@@ -137,24 +122,23 @@ void Gauss_seidel_redblack2(double ***f,double *** u, int n, int N,int max_iter,
         //Black points done, send and recv for next iteration
         if (neigh[0] != -1){
             // send and recieve above
-            MPI_Irecv(&(u[1][0][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD, &requests[0]);
-            MPI_Isend(&(u[1][1][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD,&requests[1]);
+            MPI_Send(&(u[1][1][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][0][1]), 1, send, neigh[0], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[1] != -1){
             // send and recieve left
-            MPI_Irecv(&(u[0][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, &requests[2]);
-            MPI_Isend(&(u[1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD,&requests[3]);
+            MPI_Send(&(u[1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[0][1][0]), (n-2)*N, MPI_DOUBLE, neigh[1], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[2] != -1){
             // send and recieve right
-            MPI_Irecv(&(u[n-1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, &requests[4]);
-            MPI_Isend(&(u[n-2][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD,&requests[5]);
+            MPI_Send(&(u[n-2][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[n-1][1][0]), (n-2)*N, MPI_DOUBLE, neigh[2], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
         if (neigh[3] != -1){
             // send and recieve below
-            MPI_Irecv(&(u[1][n-1][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD,&requests[6]);
-            MPI_Isend(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD,&requests[7]);
-            
+            MPI_Send(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD);
+            MPI_Recv(&(u[1][n-1][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
         }
 
         if (iter % FrobCheckFreq == 0) {

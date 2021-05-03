@@ -5,7 +5,7 @@
 #include "mpi.h"
 #include "Checks.h"
 
-void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,double * tolerance) {
+void Gauss_seidel_redblack_timing(double ***f,double *** u, int n, int N,int max_iter,double * tolerance) {
 
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -21,7 +21,12 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
     int i,j,k;
     double tolCheck = (*tolerance)*(*tolerance);
     int FrobCheckFreq = 100;   
+    //Timing Variables
+    double t1,t2;
+    double time_send = 0;
+    double time_compute = 0;
     
+
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
 
@@ -66,6 +71,8 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         }
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
 
+        t1 = MPI_Wtime();
+
         for(i=1; i<n-1;i++){         //x
             for(j=1; j<n-1;j++){     //z
                 for(k=1; k<N-1;k++){ //y
@@ -84,6 +91,9 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
                 }
             }
         }
+
+        time_compute += MPI_Wtime() - t1;
+        t2 = MPI_Wtime();
 
         //Red points done, send and recv to black points
         if (neigh[0] != -1){
@@ -108,6 +118,8 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         }
 
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
+
+        time_send += MPI_Wtime() - t2;
 
          for(i=1; i<n-1;i++){        //x
             for(j=1; j<n-1;j++){     //z
@@ -163,6 +175,13 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
             printf("Stopped due to iter_max \n");
         }
         
+    }
+
+    MPI_Allreduce(&time_compute,&time_compute,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    MPI_Allreduce(&time_send,&time_send,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
+    if (rank == 0){
+        printf("Average Compute Time = %f\n",time_compute/iter);
+        printf("Average Send Time = %f\n",time_send/iter);
     }
 
     if (rank == 0) {

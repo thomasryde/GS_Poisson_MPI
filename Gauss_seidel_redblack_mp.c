@@ -1,15 +1,17 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <omp.h>
 #include "mpi.h"
 #include "Checks.h"
 
-void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,double * tolerance) {
+void Gauss_seidel_redblack_mp(double ***f,double *** u, int n, int N,int max_iter,double * tolerance) {
 
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    int iam;
 
     //Initialize Constants
     double FrobNorm = 10; //accumilator for frobenius norm
@@ -20,8 +22,8 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
     double h = 1.0/6;
     int i,j,k;
     double tolCheck = (*tolerance)*(*tolerance);
-    int FrobCheckFreq = 100;   
-    
+    int FrobCheckFreq = 100;
+
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
 
@@ -66,11 +68,11 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         }
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
 
+        #pragma omp parallel for private(i,j,k,u_tmp) reduction(+: FrobNorm)
         for(i=1; i<n-1;i++){         //x
             for(j=1; j<n-1;j++){     //z
                 for(k=1; k<N-1;k++){ //y
                     //Gauss-seidel iteration
-                    
                     //Red Points
                     if( (i+j+k) % 2 == 0){
                         if (iter % FrobCheckFreq == 0){
@@ -108,8 +110,8 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         }
 
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
-
-         for(i=1; i<n-1;i++){        //x
+        #pragma omp parallel for private(i,j,k,u_tmp) reduction(+: FrobNorm)
+        for(i=1; i<n-1;i++){         //x
             for(j=1; j<n-1;j++){     //z
                 for(k=1; k<N-1;k++){ //y
                     //Gauss-seidel iteration

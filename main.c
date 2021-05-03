@@ -6,17 +6,18 @@
 #include <math.h>
 #include "InitArrays.h"
 #include <omp.h>
-
 #include <mpi.h>
 #include "Algorithms.h"
 #include "Checks.h"
 
 #define N_DEFAULT 100
 
-#define case_type 3 // 0 for correctness test,
-                    // 1 for blocked Gauss Seidel,
-                    // 2 for non blocked Gauss Seidel, 
-                    // 3 for Red and Black Gauss Seidel.
+//#define case_type 4 // 0 for correctness test,
+                      // 1 for blocked Gauss Seidel,
+                      // 2 for non blocked Gauss Seidel, 
+                      // 3 for Red and Black Gauss Seidel.
+                      // 4 for Red and Black Gauss Seidel && OpenMP.
+                      // 100 for Red and Black Gauss Seidel with Timing.
 
 int main(int argc, char *argv[]) {
 
@@ -29,7 +30,7 @@ int main(int argc, char *argv[]) {
     int 	N = N_DEFAULT;
     int 	iter_max = 1000;
     double 	tolerance;
-    double	start_T;
+    int	    case_type;
     int		output_type = 0;
     char	*output_prefix = "poisson_res";
     char    *output_ext    = "";
@@ -42,7 +43,7 @@ int main(int argc, char *argv[]) {
     N         = atoi(argv[1]);	// grid size
     iter_max  = atoi(argv[2]);  // max. no. of iterations
     tolerance = atof(argv[3]);  // tolerance
-    start_T   = atof(argv[4]);  // start T for all inner grid points
+    case_type   = atof(argv[4]);  // start T for all inner grid points
     if (argc == 6) {
 	    output_type = atoi(argv[5]);  // output type
     }
@@ -119,7 +120,7 @@ int main(int argc, char *argv[]) {
         }
         break;
 
-    case 3: // Red and Black Gauss Seidel
+    case 3: // Red and Black Gauss Seidel non blocked
         if (rank == 0){
             printf("---Running Gauss Seidel with red and black---\n");
         }
@@ -130,6 +131,40 @@ int main(int argc, char *argv[]) {
             t1 = MPI_Wtime();
         }
         Gauss_seidel_redblack(f,u,n,N,iter_max,&tolerance);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            time = MPI_Wtime() - t1;
+            printf("It took %f seconds!\n",time);
+        }
+        break;
+    case 4: // Red and Black Gauss Seidel with openMP
+        if (rank == 0){
+            printf("---Running HYBRID Gauss Seidel with red and black and OpenMP---\n");
+        }
+        InitializeU(u, n, N);
+        InitializeF(f, n, N, size, rank);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            t1 = MPI_Wtime();
+        }
+        Gauss_seidel_redblack_mp(f,u,n,N,iter_max,&tolerance);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            time = MPI_Wtime() - t1;
+            printf("It took %f seconds!\n",time);
+        }
+        break;
+    case 100: // Red and Black Gauss Seidel non blocked with timing
+        if (rank == 0){
+            printf("---Running Gauss Seidel TIMING with red and black---\n");
+        }
+        InitializeU(u, n, N);
+        InitializeF(f, n, N, size, rank);
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (rank == 0){
+            t1 = MPI_Wtime();
+        }
+        Gauss_seidel_redblack_timing(f,u,n,N,iter_max,&tolerance);
         MPI_Barrier(MPI_COMM_WORLD);
         if (rank == 0){
             time = MPI_Wtime() - t1;
