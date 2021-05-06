@@ -1,0 +1,3 @@
+---Running HYBRID Gauss Seidel with red and black and OpenMP---
+Stopped in iteration number: 5
+Average iteration runtime 0.434871 seconds (skipping iter == 0) !

@@ -1,0 +1,3 @@
+---Running non blocked Gauss Seidel---
+Stopped in iteration number: 5
+Average iteration runtime 1.572722 seconds (skipping iter == 0) !

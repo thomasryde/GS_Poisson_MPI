@@ -1,0 +1,4 @@
+---Running Gauss Seidel with red and black---
+Iter = 100 --- FrobNorm = 886.713276
+Stopped in iteration number: 100
+Average iteration runtime 0.000603 seconds (skipping iter == 0) !

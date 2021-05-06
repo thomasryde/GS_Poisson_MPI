@@ -6,7 +6,7 @@
 # --- reserving N cores on each machine up to the total number cores requested
 #BSUB -R "span[block=24]"
 # --- Wall time
-#BSUB -W 00:40
+#BSUB -W 00:10
 # --- Specify that we need X GB of memory per core/slot
 #BSUB -R "rusage[mem=10GB]"
 #BSUB -J profiling
@@ -20,52 +20,16 @@ make clean
 make CFLAGS="-O3 -march=native"
 
 tol=0
+iter=5
 
-# Loop matrix size
-for N_n in 100 500 1000 1500 2000 2500 3000 3500 4000
-do
-
-if [[ $N_n -lt 200 ]]
-then
-    iter=100
-elif [[ $N_n -lt 1000 ]]
-then
-    iter=20
-else
-    iter=5
-fi
-
-# Loop px
-all_p="1 4 8 16 25 36 49 64 81 100" # start at 1? end at 100?
-if [[ $N_n -lt 2750 ]]
-then
-    all_p_sqr="1 2 3 4 5 6 7 8 9 10"    # squared number of processes
-elif [[ $N_n -lt 3250 ]]
-then
-    all_p_sqr="7 8 9 10"
-elif [[ $N_n -lt 3750 ]]
-then
-    all_p_sqr="9 10"
-else
-    all_p_sqr="10"
-fi
-
-for p_n in $all_p_sqr ; do
-
-N=$(($N_n-($N_n%$p_n)))
-p=$(($p_n*$p_n))
+N=3496
+p=64
 
 # skip calculations with more processors than available
 [ $p -gt $LSB_DJOB_NUMPROC ] && continue
 
 # adjust here for the different algorithms
-all_algo="4"
-for algo in $all_algo ; do
-
-if [[ $algo -eq 4 ]]
-then
-    export OMP_NUM_THREADS=4
-fi
+algo=1
 
 out="data/${N}_p${p}_${algo}"
 [ -e $out ] && continue
@@ -83,9 +47,5 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-done #algo
 
-done #p_n
-
-done #N_n
 
