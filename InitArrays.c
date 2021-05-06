@@ -41,7 +41,6 @@ void InitializeU(double ***u, int n, int N){
 }
 
 void InitializeF(double ***f, int n, int N, int size, int rank){ //fucking wrong, and also should change y and z
-    int i,j,k;
     //double rad_x_min = -1.0;
     double rad_x_max = -3.0/8.0;
     //double rad_y_min = -1.0;
@@ -62,6 +61,7 @@ void InitializeF(double ***f, int n, int N, int size, int rank){ //fucking wrong
                 x = (x_start + i)*eps - 1;
                 z = (z_start + j)*eps - 1;
                 y = k*eps - 1;
+                
                 if (x < rad_x_max && y < rad_y_max && z < rad_z_max && z > rad_z_min){
                     f[i][j][k] = 200;
                 }
@@ -71,26 +71,7 @@ void InitializeF(double ***f, int n, int N, int size, int rank){ //fucking wrong
             }
         }
     } 
-    // double rad_i = 5/16*(n);
-    // double rad_j = 1.0/4*(n);
-    // double rad_k = 1.0/2*(N);
-    // int rad_k_init = (int) ceil((double) 1/6 *(N));
     
-    // for (i = 0; i < n; i++){
-    //     for (j = 0; j < n; j++){
-    //         for (k = 0; k < N; k++){
-    //             f[i][j][k] = 0;
-    //         }
-    //     }
-    // }
-
-    // for (i = 0; i <= rad_i; i++){
-    //     for (j = 0; j <= rad_j; j++){
-    //         for (k = rad_k_init; k <= rad_k; k++){
-    //             f[i][j][k] = 200;
-    //         }
-    //     }
-    // }
 }
 
 

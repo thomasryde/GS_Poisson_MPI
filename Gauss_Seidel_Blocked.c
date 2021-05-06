@@ -6,7 +6,7 @@
 #include "Checks.h"
 
 void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,double * tolerance){
-
+    
     int size, rank;
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
@@ -24,8 +24,17 @@ void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,do
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
     
+    double t1,time;
     //Main Loop
     while (iter <= max_iter && FrobNorm > tolCheck){
+        //----------- TIMING
+        
+        if (iter == 1) {
+            MPI_Barrier(MPI_COMM_WORLD);
+            if (rank == 0) {
+                t1 = MPI_Wtime();
+            }
+        }
         if (iter % FrobCheckFreq == 0){
             FrobNorm = 0;
         }
@@ -89,7 +98,7 @@ void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,do
             MPI_Allreduce(&FrobNorm,&FrobNorm,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
         }
         
-        if (iter % FrobCheckFreq == 0 && rank == 0){
+        if (iter % FrobCheckFreq == 0 && rank == 0 && iter != 0){
              printf("Iter = %d --- FrobNorm = %f\n",iter,FrobNorm);
         }
         iter += 1;
@@ -98,4 +107,9 @@ void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,do
         printf("Stopped in iteration number: %d\n",iter-1);
     }
     *tolerance = sqrt(FrobNorm);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (rank == 0) {
+        time = MPI_Wtime() - t1;
+        printf("Average iteration runtime %f seconds (skipping iter == 0) !\n",time/max_iter);
+    }
 }

@@ -57,11 +57,20 @@ int main(int argc, char *argv[]) {
     // allocate memory
     if ( (u = d_malloc_3d(n, n, N)) == NULL ) {
         printf("array u: allocation failed on rank %d\n",rank);
-        exit(-1);
+        //exit(-1);
+        free(u);
+
+        MPI_Finalize();
+        return 0;
     }
     if ( (f = d_malloc_3d(n, n, N)) == NULL ) {
         printf("array f: allocation failed on rank %d\n",rank);
-        exit(-1);
+        //exit(-1);
+        free(u);
+        free(f);
+
+        MPI_Finalize();
+        return 0;
     }
 
     switch(case_type){
@@ -87,19 +96,12 @@ int main(int argc, char *argv[]) {
         if (rank == 0){
             printf("---Running blocked Gauss Seidel---\n");
         }
+        
         InitializeU(u, n, N);
         InitializeF(f, n, N, size, rank);
         
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            t1 = MPI_Wtime();
-        }
         Gauss_Seidel_Blocked(f,u,n,N,iter_max,&tolerance);
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            time = MPI_Wtime() - t1;
-            printf("It took %f seconds!\n",time);
-        }
+        
         break;
 
     case 2: // non-blocked Gauss Seidel
@@ -108,16 +110,9 @@ int main(int argc, char *argv[]) {
         }
         InitializeU(u, n, N);
         InitializeF(f, n, N, size, rank);
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            t1 = MPI_Wtime();
-        }
+        
         Gauss_Seidel_nonblocked(f,u,n,N,iter_max,&tolerance);
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            time = MPI_Wtime() - t1;
-            printf("It took %f seconds!\n",time);
-        }
+        
         break;
 
     case 3: // Red and Black Gauss Seidel non blocked
@@ -126,16 +121,9 @@ int main(int argc, char *argv[]) {
         }
         InitializeU(u, n, N);
         InitializeF(f, n, N, size, rank);
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            t1 = MPI_Wtime();
-        }
+        
         Gauss_seidel_redblack(f,u,n,N,iter_max,&tolerance);
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            time = MPI_Wtime() - t1;
-            printf("It took %f seconds!\n",time);
-        }
+        
         break;
     case 4: // Red and Black Gauss Seidel with openMP
         if (rank == 0){
@@ -143,16 +131,9 @@ int main(int argc, char *argv[]) {
         }
         InitializeU(u, n, N);
         InitializeF(f, n, N, size, rank);
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            t1 = MPI_Wtime();
-        }
+        
         Gauss_seidel_redblack_mp(f,u,n,N,iter_max,&tolerance);
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (rank == 0){
-            time = MPI_Wtime() - t1;
-            printf("It took %f seconds!\n",time);
-        }
+        
         break;
     case 100: // Red and Black Gauss Seidel non blocked with timing
         if (rank == 0){
@@ -168,7 +149,7 @@ int main(int argc, char *argv[]) {
         MPI_Barrier(MPI_COMM_WORLD);
         if (rank == 0){
             time = MPI_Wtime() - t1;
-            printf("It took %f seconds!\n",time);
+            printf("Average iteration runtime %f seconds!\n",time/iter_max);
         }
         break;
     default:

@@ -1,0 +1,4 @@
+---Running blocked Gauss Seidel---
+Iter = 100 --- FrobNorm = 931.386478
+Stopped in iteration number: 100
+Average iteration runtime 0.001466 seconds (skipping iter == 0) !
