@@ -13,7 +13,7 @@ OBJS += InitArrays.o
 
 alloc3d.o: alloc3d.c alloc3d.h
 	$(MPICC) -c $< $(INCLUDES) $(CFLAGS)
-Algorithms.o: HelperFunctions.h Gauss_Seidel_Blocked.c Gauss_Seidel_nonblocked.c Gauss_seidel_redblack.c Gauss_seidel_redblack_v3.c Gauss_seidel_redblack_v2.c Gauss_seidel_redblack_mp.c Gauss_seidel_redblack_timing.c Algorithms.h
+Algorithms.o: HelperFunctions.h Gauss_seidel_redblack_mp_v2.c Gauss_Seidel_Blocked.c Gauss_Seidel_nonblocked.c Gauss_seidel_redblack.c Gauss_seidel_redblack_v3.c Gauss_seidel_redblack_v2.c Gauss_seidel_redblack_mp.c Gauss_seidel_redblack_timing.c Algorithms.h
 	$(MPICC) -c $< $(INCLUDES) $(CFLAGS)
 Checks.o: Checks.c Checks.h
 	$(MPICC) -c $< $(INCLUDES) $(CFLAGS)

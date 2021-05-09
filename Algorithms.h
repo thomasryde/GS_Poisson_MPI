@@ -19,3 +19,6 @@ void Gauss_seidel_redblack_timing(double ***f,double *** u, int n, int N,int max
 
 #include "Gauss_seidel_redblack_mp.c"
 void Gauss_seidel_redblack_mp(double ***f,double *** u, int n, int N,int max_iter,double * tolerance);
+
+#include "Gauss_seidel_redblack_mp_v2.c"
+void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_iter,double * tolerance);

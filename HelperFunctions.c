@@ -48,3 +48,29 @@ void SendRecieve(int neigh[],int n,int N,int iter,MPI_Request requests[],double 
         MPI_Isend(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD,&requests[7]);
     }
 }
+
+// void ComputeInnerPoints_mp(int x_interval[],int y_interval[],int z_interval[], int iter, double delta_sq,int FrobCheckFreq, double *FrobNorm, double ***f,double *** u, int redFlag){
+//     double u_tmp;
+//     double h = 1.0/6;
+//     int i,j,k;
+//     static double localNorm = 0;
+//     #pragma omp for private(i,j,k,u_tmp) reduction(+:localNorm)
+//     for(i=x_interval[0]; i<x_interval[1];i++){         //x
+//         for(j=z_interval[0]; j<z_interval[1];j++){     //z
+//             for(k=y_interval[0]; k<y_interval[1];k++){ //y
+//                 //Gauss-seidel iteration
+                
+//                 //Red Points
+//                 if( (i+j+k) % 2 == redFlag){
+//                     if (iter % FrobCheckFreq == 0){
+//                         u_tmp = u[i][j][k];
+//                         u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
+//                         FrobNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
+//                     } else{
+//                         u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
+//                     }
+//                 }
+//             }
+//         }
+//     }
+// }
