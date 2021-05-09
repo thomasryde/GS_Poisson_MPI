@@ -7,8 +7,10 @@
 #include "InitArrays.h"
 #include <omp.h>
 #include <mpi.h>
+#include "HelperFunctions.h"
 #include "Algorithms.h"
 #include "Checks.h"
+
 
 #define N_DEFAULT 100
 
@@ -17,6 +19,8 @@
                       // 2 for non blocked Gauss Seidel, 
                       // 3 for Red and Black Gauss Seidel.
                       // 4 for Red and Black Gauss Seidel && OpenMP.
+                      // 5 for Red and Black Gauss Seidel v2.
+                      // 6 for Red and Black Gauss Seidel v3.
                       // 100 for Red and Black Gauss Seidel with Timing.
 
 int main(int argc, char *argv[]) {
@@ -133,6 +137,26 @@ int main(int argc, char *argv[]) {
         InitializeF(f, n, N, size, rank);
         
         Gauss_seidel_redblack_mp(f,u,n,N,iter_max,&tolerance);
+        
+        break;
+    case 5: // Red and Black Gauss Seidel non blocked v2!!
+        if (rank == 0){
+            printf("---Running Gauss Seidel with red and black v2---\n");
+        }
+        InitializeU(u, n, N);
+        InitializeF(f, n, N, size, rank);
+        
+        Gauss_seidel_redblack_v2(f,u,n,N,iter_max,&tolerance);
+        
+        break;
+    case 6: // Red and Black Gauss Seidel non blocked v3!!
+        if (rank == 0){
+            printf("---Running Gauss Seidel with red and black v2---\n");
+        }
+        InitializeU(u, n, N);
+        InitializeF(f, n, N, size, rank);
+        
+        Gauss_seidel_redblack_v3(f,u,n,N,iter_max,&tolerance);
         
         break;
     case 100: // Red and Black Gauss Seidel non blocked with timing
