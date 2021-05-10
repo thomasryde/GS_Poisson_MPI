@@ -24,9 +24,6 @@ void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_
     double tolCheck = (*tolerance)*(*tolerance);
     int FrobCheckFreq = 100;
 
-    int neigh[4];
-    NeighbourCheck(neigh, size, rank);
-
     int Two_n_2[2] = {2,n-2};
     int Two_N_2[2] = {2,N-2};
     int One_2[2] = {1,2};
@@ -34,6 +31,9 @@ void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_
     int One_N_1[2] = {1,N-1};
     int n_2_n_1[2] = {n-2,n-1};
     int N_2_N_1[2] = {N-2,N-1};
+
+    int neigh[4];
+    NeighbourCheck(neigh, size, rank);
 
     // Make stride information
     MPI_Datatype send;
@@ -48,7 +48,6 @@ void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_
         requests[i] = MPI_REQUEST_NULL;
     }
     
-
     SendRecieve(neigh,n,N,iter,requests,u,send);
     
     double t1,time;
@@ -63,13 +62,12 @@ void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_
         if (iter % FrobCheckFreq == 0){
             FrobNorm = 0;
         }
-        
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
 
-        //Compute RED
+        localNorm = 0;
         #pragma omp parallel
         {
-        #pragma omp master
+        #pragma omp single nowait
         {
         ComputeInnerPoints(One_2,One_N_1,One_n_1,iter,delta_sq,FrobCheckFreq, &FrobNorm, f,u,0);
         ComputeInnerPoints(n_2_n_1,One_N_1,One_n_1,iter,delta_sq,FrobCheckFreq, &FrobNorm, f,u,0);
@@ -80,34 +78,33 @@ void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_
 
         SendRecieve(neigh,n,N,iter,requests,u,send);
         }
-            localNorm = 0;
-            #pragma omp for private(i,j,k,u_tmp) reduction(+:localNorm)
-            for(i=Two_n_2[0]; i<Two_n_2[1];i++){         //x
-                for(j=Two_n_2[0]; j<Two_n_2[1];j++){     //z
-                    for(k=Two_N_2[0]; k<Two_N_2[1];k++){ //y
-                        //Gauss-seidel iteration
-                        
-                        if( (i+j+k) % 2 == 0){
-                            if (iter % FrobCheckFreq == 0){
-                                u_tmp = u[i][j][k];
-                                u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
-                                localNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
-                            } else{
-                                u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
-                            }
+
+        #pragma omp for private(i,j,k,u_tmp) reduction(+: localNorm)
+        for(i=2; i<n-2;i++){         //x
+            for(j=2; j<n-2;j++){     //z
+                for(k=2; k<N-2;k++){ //y
+                    //Gauss-seidel iteration
+                    //Red Points
+                    if( (i+j+k) % 2 == 0){
+                        if (iter % FrobCheckFreq == 0){
+                            u_tmp = u[i][j][k];
+                            u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
+                            localNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
+                        } else{
+                            u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
                         }
                     }
                 }
             }
         }
-        FrobNorm += localNorm;
 
-        MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
-
-        //Compute BLACK
-        #pragma omp parallel
+        #pragma omp single nowait
         {
-        #pragma omp master
+            MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
+        }
+        #pragma omp barrier
+            
+        #pragma omp single nowait
         {
         ComputeInnerPoints(One_2,One_N_1,One_n_1,iter,delta_sq,FrobCheckFreq, &FrobNorm, f,u,1);
         ComputeInnerPoints(n_2_n_1,One_N_1,One_n_1,iter,delta_sq,FrobCheckFreq, &FrobNorm, f,u,1);
@@ -118,26 +115,24 @@ void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_
 
         SendRecieve(neigh,n,N,iter,requests,u,send);
         }
-            localNorm = 0;
-            #pragma omp for private(i,j,k,u_tmp) reduction(+:localNorm)
-            for(i=Two_n_2[0]; i<Two_n_2[1];i++){         //x
-                for(j=Two_n_2[0]; j<Two_n_2[1];j++){     //z
-                    for(k=Two_N_2[0]; k<Two_N_2[1];k++){ //y
-                        //Gauss-seidel iteration
-                        
-                        if( (i+j+k) % 2 == 1){
-                            if (iter % FrobCheckFreq == 0){
-                                u_tmp = u[i][j][k];
-                                u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
-                                FrobNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
-                            } else{
-                                u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
-                            }
+        #pragma omp for private(i,j,k,u_tmp) reduction(+: localNorm)
+        for(i=2; i<n-2;i++){         //x
+            for(j=2; j<n-2;j++){     //z
+                for(k=2; k<N-2;k++){ //y
+                    //Gauss-seidel iteration
+                    //Red Points
+                    if( (i+j+k) % 2 == 1){
+                        if (iter % FrobCheckFreq == 0){
+                            u_tmp = u[i][j][k];
+                            u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
+                            localNorm += (u[i][j][k] - u_tmp) * (u[i][j][k] - u_tmp);
+                        } else{
+                            u[i][j][k] = h*(u[i-1][j][k] + u[i+1][j][k] + u[i][j-1][k] + u[i][j+1][k] + u[i][j][k-1] + u[i][j][k+1] + delta_sq*f[i][j][k]);
                         }
                     }
                 }
             }
-
+        }
         }
         FrobNorm += localNorm;
 
@@ -161,9 +156,7 @@ void Gauss_seidel_redblack_mp_v2(double ***f,double *** u, int n, int N,int max_
     }
     MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
     *tolerance = sqrt(FrobNorm);
-    MPI_Type_free(&send);
     MPI_Barrier(MPI_COMM_WORLD);
-    
     if (rank == 0) {
         time = MPI_Wtime() - t1;
         printf("Average iteration runtime %f seconds (skipping iter == 0) !\n",time/max_iter);

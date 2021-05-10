@@ -21,7 +21,8 @@
                       // 4 for Red and Black Gauss Seidel && OpenMP.
                       // 5 for Red and Black Gauss Seidel v2.
                       // 6 for Red and Black Gauss Seidel v3.
-                      // 7 for Red and Black Gauss Seidel && OpenMPv2.
+                      // 7 for Red and Black Gauss Seidel && OpenMP NUMA
+                      // 8 for Red and Black Gauss Seidel && OpenMPv2.
                       // 100 for Red and Black Gauss Seidel with Timing.
 
 int main(int argc, char *argv[]) {
@@ -160,7 +161,17 @@ int main(int argc, char *argv[]) {
         Gauss_seidel_redblack_v3(f,u,n,N,iter_max,&tolerance);
         
         break;
-    case 7: // Red and Black Gauss Seidel with openMP_v2
+    case 7: // Red and Black Gauss Seidel with openMP NUMA
+        if (rank == 0){
+            printf("---Running HYBRID Gauss Seidel with red and black and OpenMP NUMA---\n");
+        }
+        InitializeU_mp(u, n, N);
+        InitializeF_mp(f, n, N, size, rank);
+        
+        Gauss_seidel_redblack_mp(f,u,n,N,iter_max,&tolerance);
+        
+        break;
+    case 8: // Red and Black Gauss Seidel with openMP_v2
         if (rank == 0){
             printf("---Running HYBRID Gauss Seidel with red and black and OpenMP V2---\n");
         }
