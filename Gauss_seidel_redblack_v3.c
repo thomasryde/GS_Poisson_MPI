@@ -16,12 +16,12 @@ void Gauss_seidel_redblack_v3(double ***f,double *** u, int n, int N,int max_ite
     //Initialize Constants
     double FrobNorm = 10; //accumilator for frobenius norm
     int iter = 0; //iterator
-    double d = 10.0;
     double delta_sq = 4.0/(N*N);
     int i,j,k;
     double tolCheck = (*tolerance)*(*tolerance);
     int FrobCheckFreq = 100;   
     
+    // Intervals for computations
     int Two_n_2[2] = {2,n-2};
     int Two_N_2[2] = {2,N-2};
     int One_2[2] = {1,2};
@@ -30,6 +30,7 @@ void Gauss_seidel_redblack_v3(double ***f,double *** u, int n, int N,int max_ite
     int n_2_n_1[2] = {n-2,n-1};
     int N_2_N_1[2] = {N-2,N-1};
 
+    //Neighbors
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
 
