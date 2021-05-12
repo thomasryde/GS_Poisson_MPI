@@ -11,12 +11,9 @@ void Gauss_seidel_redblack_mp(double ***f,double *** u, int n, int N,int max_ite
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    int iam;
-
     //Initialize Constants
     double FrobNorm = 10; //accumilator for frobenius norm
     int iter = 0; //iterator
-    double d = 10.0;
     double u_tmp;
     double delta_sq = 4.0/(N*N);
     double h = 1.0/6;
@@ -24,6 +21,7 @@ void Gauss_seidel_redblack_mp(double ***f,double *** u, int n, int N,int max_ite
     double tolCheck = (*tolerance)*(*tolerance);
     int FrobCheckFreq = 100;
 
+    //Neightbor Check
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
 
@@ -73,8 +71,10 @@ void Gauss_seidel_redblack_mp(double ***f,double *** u, int n, int N,int max_ite
         if (iter % FrobCheckFreq == 0){
             FrobNorm = 0;
         }
+        //Synchronize
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
 
+        //OpenMP
         #pragma omp parallel for private(i,j,k,u_tmp) reduction(+: FrobNorm)
         for(i=1; i<n-1;i++){         //x
             for(j=1; j<n-1;j++){     //z
@@ -116,7 +116,10 @@ void Gauss_seidel_redblack_mp(double ***f,double *** u, int n, int N,int max_ite
             MPI_Isend(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD,&requests[7]);
         }
 
+        //Synchronize
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
+        
+        //OpenMP
         #pragma omp parallel for private(i,j,k,u_tmp) reduction(+: FrobNorm)
         for(i=1; i<n-1;i++){         //x
             for(j=1; j<n-1;j++){     //z

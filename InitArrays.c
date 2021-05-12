@@ -74,7 +74,7 @@ void InitializeF(double ***f, int n, int N, int size, int rank){ //fucking wrong
     
 }
 
-
+// Initialize U for analytic problem
 void InitU_cortest(double ***u, int n, int N){
     int i,j,k;
   
@@ -87,6 +87,7 @@ void InitU_cortest(double ***u, int n, int N){
     }
 }
 
+// Initialize F for analytic problem
 void InitF_cortest(double ***f, int n, int N, int size, int rank) {
     int i,j,k;
     
@@ -112,7 +113,7 @@ void InitF_cortest(double ***f, int n, int N, int size, int rank) {
   
 }
 
-
+// Initialize U using openMP due to NUMA
 void InitializeU_mp(double ***u, int n, int N){
     // Initializing u[x,z,y]
     int i,j,k;
@@ -150,6 +151,7 @@ void InitializeU_mp(double ***u, int n, int N){
     }
 }
 
+// Initialize F using openMP due to NUMA
 void InitializeF_mp(double ***f, int n, int N, int size, int rank){ //fucking wrong, and also should change y and z
     //double rad_x_min = -1.0;
     double rad_x_max = -3.0/8.0;

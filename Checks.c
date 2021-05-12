@@ -5,6 +5,7 @@
 
 #define PI 3.14159265358979323846
 
+//Check if chosen gride size is ok
 int InputCheck(int N, int size){
     int int_sqrt_size;
     if (sqrt((double)size) * sqrt((double)size) == size){
@@ -21,7 +22,7 @@ int InputCheck(int N, int size){
     return int_sqrt_size;
 }
 
-
+// Checking correctness using analytic solution
 double CorrectnessCheck(double *** u, double *** u_anal, int rank,int int_sqrt_size,int n,int N){
     
     if (rank == 0){
@@ -55,15 +56,13 @@ double CorrectnessCheck(double *** u, double *** u_anal, int rank,int int_sqrt_s
 
     if (rank == 0) {
         printf("The Average Error = %f\n",FrobError);
-        printf("u_anal[25][25][25] = %f\n",u_anal[25][25][25]);
     }
     return FrobError;
 
 }
 
 
-
-
+// Compute which rank is a neighbor
 int CheckEdge(int size, int rank) {
     //edge above = 1, edge left = 2, edge right = 3, edge below = 4,
     int edge, len;
@@ -99,6 +98,7 @@ int CheckEdge(int size, int rank) {
     return edge;
 }
 
+// Compute neighbor
 void NeighbourCheck(int neigh[], int size, int rank){
     // neigh[0] = above, neigh[1] = left, neigh[2] = right, neigh[3] = below
     int edge1, edge2,len;

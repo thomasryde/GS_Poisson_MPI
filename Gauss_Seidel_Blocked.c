@@ -21,6 +21,7 @@ void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,do
     double tolCheck = (*tolerance) * (*tolerance);
     int FrobCheckFreq = 100;
 
+    // Neighbors
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
     
@@ -28,7 +29,6 @@ void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,do
     //Main Loop
     while (iter <= max_iter && FrobNorm > tolCheck){
         //----------- TIMING
-        
         if (iter == 1) {
             MPI_Barrier(MPI_COMM_WORLD);
             if (rank == 0) {
@@ -38,6 +38,7 @@ void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,do
         if (iter % FrobCheckFreq == 0){
             FrobNorm = 0;
         }
+
         // neigh[0] = above, neigh[1] = left, neigh[2] = right, neigh[3] = below
         for (j=1; j<n-1;j++){         //z
             
@@ -94,6 +95,7 @@ void Gauss_Seidel_Blocked(double ***f,double *** u, int n, int N,int max_iter,do
             }
         }
         
+        // Compute FrobNorm
         if (iter % FrobCheckFreq == 0) {
             MPI_Allreduce(&FrobNorm,&FrobNorm,1,MPI_DOUBLE,MPI_SUM,MPI_COMM_WORLD);
         }

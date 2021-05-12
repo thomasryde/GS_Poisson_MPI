@@ -14,7 +14,6 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
     //Initialize Constants
     double FrobNorm = 10; //accumilator for frobenius norm
     int iter = 0; //iterator
-    double d = 10.0;
     double u_tmp;
     double delta_sq = 4.0/(N*N);
     double h = 1.0/6;
@@ -22,6 +21,7 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
     double tolCheck = (*tolerance)*(*tolerance);
     int FrobCheckFreq = 100;   
     
+    //Neighbor
     int neigh[4];
     NeighbourCheck(neigh, size, rank);
 
@@ -62,6 +62,7 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
     double t1,time;
     //Main Loop
     while (iter <= max_iter && FrobNorm > tolCheck){
+        //Timing
         if (iter == 1) {
             MPI_Barrier(MPI_COMM_WORLD);
             if (rank == 0) {
@@ -71,6 +72,7 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
         if (iter % FrobCheckFreq == 0){
             FrobNorm = 0;
         }
+        //Synchronize
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
 
         for(i=1; i<n-1;i++){         //x
@@ -114,6 +116,7 @@ void Gauss_seidel_redblack(double ***f,double *** u, int n, int N,int max_iter,d
             MPI_Isend(&(u[1][n-2][1]), 1, send, neigh[3], iter, MPI_COMM_WORLD,&requests[7]);
         }
 
+        //Synchronize
         MPI_Waitall(noRequests,requests,MPI_STATUSES_IGNORE);
 
          for(i=1; i<n-1;i++){        //x
