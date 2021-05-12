@@ -65,10 +65,10 @@ p=$(($p_n*$p_n))
 [ $p -gt $LSB_DJOB_NUMPROC ] && continue
 
 # adjust here for the different algorithms
-all_algo="4"
+all_algo="3"
 for algo in $all_algo ; do
 
-if [[ $algo -eq 4 ]]
+if [[ $algo -eq 8 ]]
 then
     export OMP_NUM_THREADS=24
 fi

@@ -1,0 +1,4 @@
+[1,0]<stdout>:---Running HYBRID Gauss Seidel with red and black and OpenMP NUMA---
+[1,0]<stdout>:Iter = 100 --- FrobNorm = 957.238359
+[1,0]<stdout>:Stopped in iteration number: 100
+[1,0]<stdout>:Average iteration runtime 0.001076 seconds (skipping iter == 0) !

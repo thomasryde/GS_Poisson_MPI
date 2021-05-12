@@ -1,0 +1,4 @@
+[1,0]<stdout>:array u: allocation failed on rank 0
+[1,3]<stdout>:array u: allocation failed on rank 3
+[1,1]<stdout>:array u: allocation failed on rank 1
+[1,2]<stdout>:array u: allocation failed on rank 2

@@ -59,7 +59,7 @@ p=$(($p_n*$p_n))
 [ $p -gt $LSB_DJOB_NUMPROC ] && continue
 
 # adjust here for the different algorithms
-all_algo="8"
+all_algo="3"
 for algo in $all_algo ; do
 
 if [[ $algo -eq 8 ]]
